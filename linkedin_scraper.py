@@ -2,12 +2,14 @@ from playwright.sync_api import sync_playwright
 import json
 import re
 import time
+from telegram_sender import send_jobs
+import asyncio
 
 def load_cookies(path="cookies.json"):
     with open(path, "r") as f:
         return json.load(f)
 
-def get_jobs_for(title, location):
+def get_jobs_for(title, location, send_to_telegram=False):
     url = f"https://www.linkedin.com/jobs/search/?keywords={title.replace(' ', '%20')}&location={location.replace(' ', '%20')}&f_TPR=r86400"
     jobs = []
 
@@ -23,7 +25,9 @@ def get_jobs_for(title, location):
         time.sleep(10)  # Let the page load
 
         try:
-            cards = page.query_selector_all("li.scaffold-layout__list-item")
+            # cards = page.query_selector_all("li.scaffold-layout__list-item")
+            cards = page.query_selector_all("li.scaffold-layout__list-item")[:5]
+
             print(f"🔍 Found {len(cards)} job cards")
 
             for i, card in enumerate(cards):
@@ -51,9 +55,9 @@ def get_jobs_for(title, location):
                     time_text = next((line for line in info_lines if "ago" in line.lower() or "just now" in line.lower()), "Time not found").strip()
 
                     job_data = (
-                        f"💼 {title_text} at {company_text}\n"
-                        f"🔗 {job_link}\n"
-                        f"🕒 {time_text}\n"
+                        f"💼 {title_text} at {company_text}\n\n"
+                        f"🔗 {job_link}\n\n"
+                        f"🕒 {time_text}\n\n"
                     )
 
                     jobs.append(job_data)
@@ -69,4 +73,9 @@ def get_jobs_for(title, location):
         browser.close()
 
     print(f"\n✅ Total jobs collected: {len(jobs)}")
+
+    if send_to_telegram:
+        label = f'{len(jobs)} jobs found for "{title} {location}"'
+        asyncio.run(send_jobs(jobs, query_label=label))
+
     return jobs
