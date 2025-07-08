@@ -39,7 +39,7 @@ async def get_jobs_for(title, location):
         await context.add_cookies(load_cookies())
 
         page = await context.new_page()
-        await page.goto(url, timeout=60000)
+        await page.goto(url, timeout=180000)
         await asyncio.sleep(10)
 
         try:
