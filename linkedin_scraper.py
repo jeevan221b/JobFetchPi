@@ -46,7 +46,7 @@ async def get_jobs_for(title, location):
             cards = await page.query_selector_all("li.scaffold-layout__list-item")
             print(f"🔍 Found {len(cards)} job cards")
 
-            for i, card in enumerate(cards[:5]):  # Limit to first 5 for testing
+            for i, card in enumerate(cards):  # Limit to first 5 for testing
                 try:
                     await card.scroll_into_view_if_needed()
                     await card.click()
