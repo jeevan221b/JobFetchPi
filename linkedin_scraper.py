@@ -2,6 +2,7 @@ import json
 import re
 import asyncio
 from playwright.async_api import async_playwright
+import os
 
 def is_recent_posted(time_text):
     time_text = time_text.lower()
@@ -23,9 +24,15 @@ def is_recent_posted(time_text):
         return True
     return False
 
-def load_cookies(path="cookies.json"):
-    with open(path, "r") as f:
-        return json.load(f)
+def load_cookies():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, "cookies.json")
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"❌ Failed to load cookies from {path}: {e}")
+        return []
 
 async def get_jobs_for(title, location):
     url = f"https://www.linkedin.com/jobs/search/?keywords={title.replace(' ', '%20')}&location={location.replace(' ', '%20')}&f_TPR=r86400"
