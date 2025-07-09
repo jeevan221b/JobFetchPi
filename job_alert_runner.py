@@ -1,23 +1,27 @@
 import json
 import asyncio
+import os
 from linkedin_scraper import get_jobs_for
 from telegram_sender import send_jobs
 from datetime import datetime, timedelta
 
+# Get the absolute path of the script directory
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ALERTS_FILE_PATH = os.path.join(SCRIPT_DIR, "job_alerts.json")
+NEXT_SCRAPE_FILE = os.path.join(SCRIPT_DIR, "next_scrape.txt")
 
 def update_next_scrape_time():
     next_time = datetime.now() + timedelta(hours=1)
-    with open("next_scrape.txt", "w") as f:
+    with open(NEXT_SCRAPE_FILE, "w") as f:
         f.write(next_time.strftime("%Y-%m-%d %H:%M:%S"))
 
-def load_alerts(path="job_alerts.json"):
+def load_alerts():
     try:
-        with open(path, "r") as f:
+        with open(ALERTS_FILE_PATH, "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        print("⚠️ No saved alerts found.")
+        print(f"⚠️ No saved alerts found at {ALERTS_FILE_PATH}")
         return []
-
 
 async def run_all_alerts_async():
     alerts = load_alerts()
@@ -48,10 +52,8 @@ async def run_all_alerts_async():
     for message in all_messages:
         await send_jobs([message])  # send_jobs expects a list of job messages
 
-
 def run_all_alerts():
     asyncio.run(run_all_alerts_async())
-
 
 if __name__ == "__main__":
     run_all_alerts()
